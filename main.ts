@@ -1,12 +1,12 @@
-import chardet from "chardet";
-import iconv from "iconv-lite";
+import { assert } from "@std/assert";
 import * as INI from "@std/ini";
-import assert from "node:assert";
-import { Buffer } from "node:buffer";
-import * as fs from "node:fs/promises";
-import path from "node:path";
-import { x } from "tinyexec";
+import chardet from "chardet";
+import $ from "dax";
+import iconv from "iconv-lite";
+import type { Buffer } from "node:buffer";
 import * as z from "zod";
+
+type PathLike = Parameters<typeof $.path>[0];
 
 const String = z.coerce.string();
 
@@ -133,21 +133,22 @@ const DesktopIni = z
 export type DesktopIni = z.infer<typeof DesktopIni>;
 
 export async function readIni(
-  file: string,
+  file: PathLike,
   defaultEncoding: string = "utf8",
 ): Promise<Record<string, unknown>> {
-  const buffer = await fs.readFile(file);
-  const encoding = chardet.detect(buffer);
-  const test = Buffer.from(buffer);
-  const decoded = iconv.decode(test, encoding || defaultEncoding);
+  file = $.path(file);
+  const bytes = await file.readBytes();
+  const encoding = chardet.detect(bytes);
+  const decoded = iconv.decode(bytes, encoding || defaultEncoding);
   return INI.parse(decoded);
 }
 
-export async function readDesktopIni(file: string): Promise<DesktopIni> {
+export async function readDesktopIni(path: PathLike): Promise<DesktopIni> {
+  path = $.path(path);
   try {
-    if (path.extname(file).toLowerCase() != ".ini")
-      file = path.join(file, "desktop.ini");
-    return DesktopIni.parse(await readIni(file, "win1252"));
+    if (path.basename().toLowerCase() != "desktop.ini")
+      path = path.join("desktop.ini");
+    return DesktopIni.parse(await readIni(path, "win1252"));
   } catch (e) {
     if (e instanceof Error && (e as NodeJS.ErrnoException).code == "ENOENT")
       return {};
@@ -164,20 +165,23 @@ export function encodeIni(
 }
 
 export async function writeIni(
-  file: string,
+  file: PathLike,
   ini: Ini,
   encoding: string = "utf8",
   addBOM: boolean = false,
 ) {
+  file = $.path(file);
   const data = encodeIni(ini, encoding, addBOM);
-  await fs.writeFile(file, data);
+  await file.write(data);
 }
 
-export async function writeDesktopIni(file: string, ini: DesktopIni) {
-  if (path.extname(file).toLowerCase() != ".ini")
-    file = path.join(file, "desktop.ini");
-  const parent = path.dirname(file);
+export async function writeDesktopIni(path: PathLike, ini: DesktopIni) {
+  path = $.path(path);
+  if (path.basename().toLowerCase() != "desktop.ini")
+    path = path.join("desktop.ini");
+  const parent = path.dirname();
 
-  await x("attrib", ["+S", "+H", file]);
-  await x("attrib", ["+R", parent]);
+  await writeIni(path, ini);
+  await $`attrib +S +H ${path}`;
+  await $`attrib +R ${parent}`;
 }
