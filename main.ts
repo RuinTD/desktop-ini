@@ -181,7 +181,7 @@ export async function writeDesktopIni(path: PathLike, ini: DesktopIni) {
     path = path.join("desktop.ini");
   const parent = path.dirname();
 
-  await writeIni(path, ini);
+  await writeIni(path, DesktopIni.encode(ini));
   await $`attrib +S +H ${path}`;
   await $`attrib +R ${parent}`;
 }
