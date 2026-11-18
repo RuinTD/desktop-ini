@@ -1,14 +1,13 @@
 {
   "name": "@ruintd/desktop-ini",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "license": "MIT",
   "exports": "./main.ts",
   "imports": {
-    "@std/assert": "jsr:@std/assert@^1.0.19",
     "@std/ini": "jsr:@std/ini@^0.225.2",
-    "chardet": "npm:chardet@^2.1.1",
-    "dax": "jsr:@david/dax@^0.48.3",
-    "iconv-lite": "npm:iconv-lite@^0.7.2",
-    "zod": "npm:zod@^4.4.3"
+    "chardet": "npm:chardet@^2.2.0",
+    "dax": "jsr:@david/dax@^0.48.6",
+    "iconv-lite": "npm:iconv-lite@^0.7.3",
+    "zod": "npm:zod@^4.6.7"
   }
 }

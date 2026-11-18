@@ -1,4 +1,4 @@
-import { assert } from "@std/assert";
+import assert from "node:assert";
 import * as INI from "@std/ini";
 import chardet from "chardet";
 import $ from "dax";
@@ -181,7 +181,8 @@ export async function writeDesktopIni(path: PathLike, ini: DesktopIni) {
     path = path.join("desktop.ini");
   const parent = path.dirname();
 
+  await path.ensureRemove();
   await writeIni(path, DesktopIni.encode(ini));
-  await $`attrib +S +H ${path}`;
-  await $`attrib +R ${parent}`;
+  await $`attrib +S +H ${path}`.quiet();
+  await $`attrib +R ${parent}`.quiet();
 }
